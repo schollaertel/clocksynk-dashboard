@@ -85,4 +85,155 @@ export async function getUser(id: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ClockSynk Dashboard Query Helpers
+
+import {
+  tasks,
+  Task,
+  InsertTask,
+  announcements,
+  Announcement,
+  InsertAnnouncement,
+  ideas,
+  Idea,
+  InsertIdea,
+  dailyFocus,
+  DailyFocus,
+  InsertDailyFocus,
+  keyDates,
+  KeyDate,
+  InsertKeyDate,
+} from "../drizzle/schema";
+import { desc, and, gte, lte } from "drizzle-orm";
+
+// Task helpers
+export async function createTask(task: InsertTask): Promise<Task> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  await db.insert(tasks).values({ ...task, id });
+  const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getTasks(): Promise<Task[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(tasks).orderBy(desc(tasks.createdAt));
+}
+
+export async function getTaskById(id: string): Promise<Task | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateTask(id: string, updates: Partial<InsertTask>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(tasks).set({ ...updates, updatedAt: new Date() }).where(eq(tasks.id, id));
+}
+
+export async function deleteTask(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(tasks).where(eq(tasks.id, id));
+}
+
+// Announcement helpers
+export async function createAnnouncement(announcement: InsertAnnouncement): Promise<Announcement> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `announcement_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  await db.insert(announcements).values({ ...announcement, id });
+  const result = await db.select().from(announcements).where(eq(announcements.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(announcements).orderBy(desc(announcements.createdAt));
+}
+
+export async function deleteAnnouncement(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(announcements).where(eq(announcements.id, id));
+}
+
+// Idea helpers
+export async function createIdea(idea: InsertIdea): Promise<Idea> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `idea_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  await db.insert(ideas).values({ ...idea, id });
+  const result = await db.select().from(ideas).where(eq(ideas.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getIdeas(): Promise<Idea[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(ideas).orderBy(desc(ideas.createdAt));
+}
+
+export async function updateIdeaStatus(id: string, status: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(ideas).set({ status: status as any }).where(eq(ideas.id, id));
+}
+
+// Daily Focus helpers
+export async function createDailyFocus(focus: InsertDailyFocus): Promise<DailyFocus> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `focus_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  await db.insert(dailyFocus).values({ ...focus, id });
+  const result = await db.select().from(dailyFocus).where(eq(dailyFocus.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getTodaysFocus(): Promise<DailyFocus[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  return db.select().from(dailyFocus)
+    .where(and(
+      gte(dailyFocus.date, today),
+      lte(dailyFocus.date, tomorrow)
+    ));
+}
+
+// Key Dates helpers
+export async function createKeyDate(keyDate: InsertKeyDate): Promise<KeyDate> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `keydate_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  await db.insert(keyDates).values({ ...keyDate, id });
+  const result = await db.select().from(keyDates).where(eq(keyDates.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getKeyDates(): Promise<KeyDate[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(keyDates).orderBy(keyDates.date);
+}
+
+export async function deleteKeyDate(id: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(keyDates).where(eq(keyDates.id, id));
+}

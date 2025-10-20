@@ -21,7 +21,7 @@ export const appRouter = router({
   // ClockSynk Dashboard Routers
   tasks: router({
     list: publicProcedure.query(async () => {
-      const { getTasks } = await import("./db");
+      const { getTasks } = await import("./googleSheets");
       return getTasks();
     }),
     create: protectedProcedure
@@ -95,7 +95,7 @@ export const appRouter = router({
 
   ideas: router({
     list: publicProcedure.query(async () => {
-      const { getIdeas } = await import("./db");
+      const { getIdeas } = await import("./googleSheets");
       return getIdeas();
     }),
     create: protectedProcedure

@@ -15,6 +15,8 @@ import {
   Search,
   Settings,
   LogOut,
+  FolderOpen,
+  CheckCircle2,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { useLocation } from "wouter";
@@ -36,13 +38,16 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
 
   const navigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
+    { name: "Check-In", href: "/check-in", icon: CheckCircle2 },
     { name: "Tasks", href: "/tasks", icon: CheckSquare },
+    { name: "Calendar", href: "/calendar", icon: Calendar },
     { name: "Sheets", href: "/sheets", icon: Table },
+    { name: "Drive", href: "/drive", icon: FolderOpen },
     { name: "Meet", href: "/meet", icon: Video },
     { name: "Chat", href: "/chat", icon: MessageSquare },
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "Ideas", href: "/ideas", icon: Lightbulb },
-    { name: "Calendar", href: "/key-dates", icon: Calendar },
+    { name: "Key Dates", href: "/key-dates", icon: Calendar },
   ];
 
   const isActive = (href: string) => {

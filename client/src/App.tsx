@@ -12,6 +12,9 @@ import KeyDates from "./pages/KeyDates";
 import Chat from "./pages/Chat";
 import Sheets from "./pages/Sheets";
 import Meet from "./pages/Meet";
+import Drive from "./pages/Drive";
+import Calendar from "./pages/Calendar";
+import CheckIn from "./pages/CheckIn";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -25,6 +28,9 @@ function Router() {
       <Route path={"/chat"} component={Chat} />
       <Route path={"/sheets"} component={Sheets} />
       <Route path={"/meet"} component={Meet} />
+      <Route path={"/drive"} component={Drive} />
+      <Route path={"/calendar"} component={Calendar} />
+      <Route path={"/check-in"} component={CheckIn} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

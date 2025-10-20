@@ -1,4 +1,4 @@
-import DashboardLayout from "@/components/DashboardLayout";
+import TeamsLayout from "@/components/TeamsLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -100,7 +100,8 @@ export default function Ideas() {
   };
 
   return (
-    <DashboardLayout>
+    <TeamsLayout>
+      <div className="p-6">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
@@ -258,7 +259,8 @@ export default function Ideas() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+      </div>
+    </TeamsLayout>
   );
 }
 

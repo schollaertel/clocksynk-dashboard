@@ -162,6 +162,36 @@ export const appRouter = router({
         return deleteKeyDate(input.id);
       }),
   }),
+
+  // Google Sheets Lookup
+  sheets: router({
+    fetchData: publicProcedure
+      .input(
+        z.object({
+          spreadsheetId: z.string(),
+          range: z.string().default("Sheet1"),
+        })
+      )
+      .query(async ({ input }) => {
+        const { fetchSheetData } = await import("./sheetsLookup");
+        return fetchSheetData(input.spreadsheetId, input.range);
+      }),
+    lookup: publicProcedure
+      .input(
+        z.object({
+          spreadsheetId: z.string(),
+          range: z.string().default("Sheet1"),
+          lookupColumn: z.string(),
+          lookupValue: z.union([z.string(), z.number()]),
+          returnColumn: z.string(),
+        })
+      )
+      .query(async ({ input }) => {
+        const { fetchSheetData, lookupValue } = await import("./sheetsLookup");
+        const data = await fetchSheetData(input.spreadsheetId, input.range);
+        return lookupValue(data, input.lookupColumn, input.lookupValue, input.returnColumn);
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

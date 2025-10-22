@@ -15,6 +15,11 @@ import Meet from "./pages/Meet";
 import Drive from "./pages/Drive";
 import Calendar from "./pages/Calendar";
 import CheckIn from "./pages/CheckIn";
+import Reports from "./pages/Reports";
+import BoardView from "./pages/BoardView";
+import ClientPortal from "./pages/ClientPortal";
+import Budget from "./pages/Budget";
+import SocialMedia from "./pages/SocialMedia";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -31,6 +36,11 @@ function Router() {
       <Route path={"/drive"} component={Drive} />
       <Route path={"/calendar"} component={Calendar} />
       <Route path={"/check-in"} component={CheckIn} />
+      <Route path={"/reports"} component={Reports} />
+      <Route path={"/board-view"} component={BoardView} />
+      <Route path={"/client-portal"} component={ClientPortal} />
+      <Route path={"/budget"} component={Budget} />
+      <Route path={"/social-media"} component={SocialMedia} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

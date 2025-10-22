@@ -156,3 +156,53 @@ export const projectUpdates = mysqlTable("projectUpdates", {
 export type ProjectUpdate = typeof projectUpdates.$inferSelect;
 export type InsertProjectUpdate = Omit<typeof projectUpdates.$inferInsert, 'id'>;
 
+
+// Notifications table for @mentions and team notifications
+export const notifications = mysqlTable("notifications", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: varchar("userId", { length: 64 }).notNull(),
+  type: mysqlEnum("type", ["mention", "task", "announcement", "report", "system"]).default("system").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isRead: mysqlEnum("isRead", ["yes", "no"]).default("no").notNull(),
+  link: varchar("link", { length: 255 }),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = Omit<typeof notifications.$inferInsert, 'id'>;
+
+
+
+// Social Media Content Ideas
+export const contentIdeas = mysqlTable("contentIdeas", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: mysqlEnum("status", ["pending", "approved", "rejected", "implemented"]).default("pending").notNull(),
+  submittedBy: varchar("submittedBy", { length: 64 }).notNull(),
+  reviewedBy: varchar("reviewedBy", { length: 64 }),
+  reviewedAt: timestamp("reviewedAt"),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type ContentIdea = typeof contentIdeas.$inferSelect;
+export type InsertContentIdea = Omit<typeof contentIdeas.$inferInsert, 'id'>;
+
+// Social Media Campaigns
+export const socialCampaigns = mysqlTable("socialCampaigns", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  status: mysqlEnum("status", ["active", "scheduled", "completed", "archived"]).default("active").notNull(),
+  folderUrl: varchar("folderUrl", { length: 500 }),
+  sheetUrl: varchar("sheetUrl", { length: 500 }),
+  postsCount: varchar("postsCount", { length: 10 }).default("0"),
+  assetsCount: varchar("assetsCount", { length: 10 }).default("0"),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type SocialCampaign = typeof socialCampaigns.$inferSelect;
+export type InsertSocialCampaign = Omit<typeof socialCampaigns.$inferInsert, 'id'>;
+

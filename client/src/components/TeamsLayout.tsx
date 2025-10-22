@@ -17,6 +17,11 @@ import {
   LogOut,
   FolderOpen,
   CheckCircle2,
+  FileText,
+  TrendingUp,
+  Users,
+  Wallet,
+  Share2,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { useLocation } from "wouter";
@@ -48,6 +53,11 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "Ideas", href: "/ideas", icon: Lightbulb },
     { name: "Key Dates", href: "/key-dates", icon: Calendar },
+    { name: "Reports", href: "/reports", icon: FileText },
+    { name: "Board View", href: "/board-view", icon: TrendingUp },
+    { name: "Budget", href: "/budget", icon: Wallet },
+    { name: "Social Media", href: "/social-media", icon: Share2 },
+    { name: "Client Portal", href: "/client-portal", icon: Users },
   ];
 
   const isActive = (href: string) => {

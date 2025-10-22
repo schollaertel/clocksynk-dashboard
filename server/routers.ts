@@ -262,6 +262,123 @@ export const appRouter = router({
       }),
   }),
 
+  // Board Member View
+  boardView: router({
+    getMetrics: protectedProcedure.query(async () => {
+      const { getBoardMetrics } = await import("./db");
+      return getBoardMetrics();
+    }),
+    getRecentActivity: protectedProcedure.query(async () => {
+      const { getRecentActivity } = await import("./db");
+      return getRecentActivity();
+    }),
+  }),
+
+  // Automated Reporting
+  reporting: router({
+    generateWeeklyReport: protectedProcedure.query(async () => {
+      const { generateWeeklyReport } = await import("./reporting");
+      return generateWeeklyReport();
+    }),
+    generateMonthlyReport: protectedProcedure.query(async () => {
+      const { generateMonthlyReport } = await import("./reporting");
+      return generateMonthlyReport();
+    }),
+    sendWeeklyReport: protectedProcedure.mutation(async () => {
+      const { sendWeeklyReport } = await import("./reporting");
+      return sendWeeklyReport();
+    }),
+    sendMonthlyReport: protectedProcedure.mutation(async () => {
+      const { sendMonthlyReport } = await import("./reporting");
+      return sendMonthlyReport();
+    }),
+  }),
+
+  // Notifications
+  notifications: router({
+    list: protectedProcedure
+      .input(z.object({ unreadOnly: z.boolean().default(false) }))
+      .query(async ({ input, ctx }) => {
+        const { getUserNotifications } = await import("./db");
+        return getUserNotifications(ctx.user.id, input.unreadOnly);
+      }),
+    unreadCount: protectedProcedure.query(async ({ ctx }) => {
+      const { getUnreadNotificationCount } = await import("./db");
+      return getUnreadNotificationCount(ctx.user.id);
+    }),
+    markAsRead: protectedProcedure
+      .input(z.object({ id: z.string() }))
+      .mutation(async ({ input }) => {
+        const { markNotificationAsRead } = await import("./db");
+        return markNotificationAsRead(input.id);
+      }),
+    markAllAsRead: protectedProcedure.mutation(async ({ ctx }) => {
+      const { markAllNotificationsAsRead } = await import("./db");
+      return markAllNotificationsAsRead(ctx.user.id);
+    }),
+  }),
+
+  // QuickBooks Integration
+  quickbooks: router({
+    getStatus: protectedProcedure.query(async () => {
+      const { getCompanyInfo, isQuickBooksConfigured } = await import("./quickbooks");
+      return {
+        configured: isQuickBooksConfigured(),
+        company: await getCompanyInfo(),
+      };
+    }),
+    getFinancialMetrics: protectedProcedure.query(async () => {
+      const { getFinancialMetrics } = await import("./quickbooks");
+      return getFinancialMetrics();
+    }),
+  }),
+
+  // Budget Tracking
+  budget: router({
+    listProjectBudgets: protectedProcedure.query(async () => {
+      const { getProjectBudgets } = await import("./db");
+      return getProjectBudgets();
+    }),
+    createProjectBudget: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.string(),
+          budget: z.number(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { createProjectBudget } = await import("./db");
+        return createProjectBudget(input.projectId, input.budget);
+      }),
+  }),
+
+  // Social Media Campaign Management
+  socialMedia: router({
+    listCampaigns: protectedProcedure.query(async () => {
+      const { getSocialCampaigns } = await import("./db");
+      return getSocialCampaigns();
+    }),
+    getContentCalendar: protectedProcedure.query(async () => {
+      const { getContentCalendar } = await import("./db");
+      return getContentCalendar();
+    }),
+    listContentIdeas: protectedProcedure.query(async () => {
+      const { getContentIdeas } = await import("./db");
+      return getContentIdeas();
+    }),
+    submitContentIdea: protectedProcedure
+      .input(
+        z.object({
+          title: z.string(),
+          description: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { createContentIdea } = await import("./db");
+        return createContentIdea({ ...input, submittedBy: ctx.user.id });
+      }),
+  }),
+
   // Google Sheets Lookup
   sheets: router({
     fetchData: publicProcedure

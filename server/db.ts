@@ -115,6 +115,9 @@ import {
   projectUpdates,
   ProjectUpdate,
   InsertProjectUpdate,
+  notifications,
+  Notification,
+  InsertNotification,
 } from "../drizzle/schema";
 import { desc, and, gte, lte } from "drizzle-orm";
 
@@ -425,6 +428,24 @@ export async function getWeeklyHours(userId: string): Promise<{ date: string; ho
 
 
 
+// Get all time entries (for reporting)
+export async function getAllTimeEntries(): Promise<TimeEntry[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(timeEntries)
+    .orderBy(desc(timeEntries.date));
+}
+
+// Get all client projects (for reporting)
+export async function getAllClientProjects(): Promise<ClientProject[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(clientProjects)
+    .orderBy(desc(clientProjects.createdAt));
+}
+
 // Client Portal helpers
 export async function getClientProjects(clientId: string): Promise<ClientProject[]> {
   const db = await getDb();
@@ -480,6 +501,299 @@ export async function createProjectUpdate(data: { message: string; author: strin
   });
   
   const result = await db.select().from(projectUpdates).where(eq(projectUpdates.id, id)).limit(1);
+  return result[0];
+}
+
+
+
+// Board Member View helpers
+export async function getBoardMetrics() {
+  const db = await getDb();
+  if (!db) {
+    return {
+      taskCompletion: 0,
+      taskTrend: "down",
+      taskTrendValue: 0,
+      activeProjects: 0,
+      completedProjects: 0,
+      revenue: 0,
+      revenueTrend: "up",
+      revenueTrendValue: 0,
+      teamHours: 0,
+      burnRate: 0,
+      runway: 0,
+      expenses: 0,
+      tasksCompleted: 0,
+      activeTasks: 0,
+      overdueTasks: 0,
+      ideasSubmitted: 0,
+    };
+  }
+
+  // Get task metrics
+  const allTasks = await db.select().from(tasks);
+  const completedTasks = allTasks.filter(t => t.status === "done");
+  const activeTasks = allTasks.filter(t => t.status === "in_progress");
+  const overdueTasks = allTasks.filter(t => t.status === "overdue");
+  
+  const taskCompletion = allTasks.length > 0 
+    ? Math.round((completedTasks.length / allTasks.length) * 100)
+    : 0;
+
+  // Get project metrics
+  const allProjects = await db.select().from(clientProjects);
+  const activeProjects = allProjects.filter(p => p.status === "in_progress").length;
+  const completedProjects = allProjects.filter(p => p.status === "completed").length;
+
+  // Get ideas
+  const allIdeas = await db.select().from(ideas);
+
+  // Calculate team hours (this week)
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+  
+  const weeklyEntries = await db.select().from(timeEntries)
+    .where(gte(timeEntries.clockIn, oneWeekAgo));
+  
+  let totalHours = 0;
+  for (const entry of weeklyEntries) {
+    if (entry.clockOut) {
+      const hours = (new Date(entry.clockOut).getTime() - new Date(entry.clockIn).getTime()) / (1000 * 60 * 60);
+      totalHours += hours;
+    }
+  }
+
+  return {
+    taskCompletion,
+    taskTrend: "up", // TODO: Calculate actual trend
+    taskTrendValue: 5,
+    activeProjects,
+    completedProjects,
+    revenue: 0, // TODO: Integrate with QuickBooks
+    revenueTrend: "up",
+    revenueTrendValue: 10,
+    teamHours: Math.round(totalHours),
+    burnRate: 0, // TODO: Calculate from expenses
+    runway: 12, // TODO: Calculate from financials
+    expenses: 0,
+    tasksCompleted: completedTasks.length,
+    activeTasks: activeTasks.length,
+    overdueTasks: overdueTasks.length,
+    ideasSubmitted: allIdeas.length,
+  };
+}
+
+export async function getRecentActivity() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const activities: any[] = [];
+
+  // Get recent tasks
+  const recentTasks = await db.select().from(tasks)
+    .where(eq(tasks.status, "done"))
+    .orderBy(desc(tasks.updatedAt))
+    .limit(5);
+
+  for (const task of recentTasks) {
+    activities.push({
+      type: "task",
+      description: `Task completed: ${task.title}`,
+      date: task.updatedAt || task.createdAt,
+    });
+  }
+
+  // Get recent projects
+  const recentProjects = await db.select().from(clientProjects)
+    .orderBy(desc(clientProjects.createdAt))
+    .limit(3);
+
+  for (const project of recentProjects) {
+    activities.push({
+      type: "project",
+      description: `Project ${project.status === "completed" ? "completed" : "started"}: ${project.projectName}`,
+      date: project.createdAt,
+    });
+  }
+
+  // Get recent ideas
+  const recentIdeas = await db.select().from(ideas)
+    .orderBy(desc(ideas.createdAt))
+    .limit(3);
+
+  for (const idea of recentIdeas) {
+    activities.push({
+      type: "idea",
+      description: `New idea submitted: ${idea.title}`,
+      date: idea.createdAt,
+    });
+  }
+
+  // Sort by date
+  activities.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return activities.slice(0, 10);
+}
+
+
+
+// Notification helpers
+export async function createNotification(notification: InsertNotification): Promise<Notification> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  await db.insert(notifications).values({
+    id,
+    ...notification,
+  });
+  
+  const result = await db.select().from(notifications).where(eq(notifications.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getUserNotifications(userId: string, unreadOnly: boolean = false): Promise<Notification[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (unreadOnly) {
+    return db.select().from(notifications)
+      .where(and(
+        eq(notifications.userId, userId),
+        eq(notifications.isRead, "no")
+      ))
+      .orderBy(desc(notifications.createdAt));
+  }
+  
+  return db.select().from(notifications)
+    .where(eq(notifications.userId, userId))
+    .orderBy(desc(notifications.createdAt))
+    .limit(50);
+}
+
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(notifications)
+    .set({ isRead: "yes" })
+    .where(eq(notifications.id, notificationId));
+}
+
+export async function markAllNotificationsAsRead(userId: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  
+  await db.update(notifications)
+    .set({ isRead: "yes" })
+    .where(and(
+      eq(notifications.userId, userId),
+      eq(notifications.isRead, "no")
+    ));
+}
+
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db.select().from(notifications)
+    .where(and(
+      eq(notifications.userId, userId),
+      eq(notifications.isRead, "no")
+    ));
+  
+  return result.length;
+}
+
+
+
+// Budget tracking helpers
+export async function getProjectBudgets() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const projects = await db.select().from(clientProjects);
+  
+  // Return projects with budget information
+  return projects.map(project => ({
+    id: project.id,
+    name: project.projectName,
+    client: project.clientName,
+    budget: parseFloat(project.budget || "0"),
+    spent: 0, // TODO: Calculate from time entries and expenses
+    status: project.status,
+  }));
+}
+
+export async function createProjectBudget(projectId: string, budget: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(clientProjects)
+    .set({ budget: budget.toString() })
+    .where(eq(clientProjects.id, projectId));
+  
+  return { success: true };
+}
+
+
+
+// Social Media helpers
+export async function getSocialCampaigns() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { socialCampaigns } = await import("../drizzle/schema");
+  
+  return db.select().from(socialCampaigns)
+    .orderBy(desc(socialCampaigns.updatedAt));
+}
+
+export async function createSocialCampaign(campaign: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { socialCampaigns } = await import("../drizzle/schema");
+  const id = `campaign_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  await db.insert(socialCampaigns).values({
+    id,
+    ...campaign,
+  });
+  
+  const result = await db.select().from(socialCampaigns).where(eq(socialCampaigns.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getContentCalendar() {
+  // Placeholder - would integrate with Google Sheets to fetch scheduled posts
+  return [];
+}
+
+export async function getContentIdeas() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { contentIdeas } = await import("../drizzle/schema");
+  
+  return db.select().from(contentIdeas)
+    .orderBy(desc(contentIdeas.createdAt));
+}
+
+export async function createContentIdea(idea: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { contentIdeas } = await import("../drizzle/schema");
+  const id = `idea_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  await db.insert(contentIdeas).values({
+    id,
+    ...idea,
+  });
+  
+  const result = await db.select().from(contentIdeas).where(eq(contentIdeas.id, id)).limit(1);
   return result[0];
 }
 

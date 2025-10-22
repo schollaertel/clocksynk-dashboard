@@ -38,6 +38,23 @@ export const tasks = mysqlTable("tasks", {
 export type Task = typeof tasks.$inferSelect;
 export type InsertTask = Omit<typeof tasks.$inferInsert, 'id'>;
 
+// Task Requests table - team members request tasks, admin approves
+export const taskRequests = mysqlTable("taskRequests", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  requestedBy: varchar("requestedBy", { length: 64 }).notNull(),
+  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  rejectionReason: text("rejectionReason"),
+  createdAt: timestamp("createdAt").defaultNow(),
+  reviewedAt: timestamp("reviewedAt"),
+  reviewedBy: varchar("reviewedBy", { length: 64 }),
+});
+
+export type TaskRequest = typeof taskRequests.$inferSelect;
+export type InsertTaskRequest = Omit<typeof taskRequests.$inferInsert, 'id'>;
+
 // Announcements table
 export const announcements = mysqlTable("announcements", {
   id: varchar("id", { length: 64 }).primaryKey(),

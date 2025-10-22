@@ -73,6 +73,48 @@ export const appRouter = router({
       }),
   }),
 
+  taskRequests: router({    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getTaskRequests } = await import("./db");
+      // Admin sees all, team members see only their own
+      if (ctx.user.email === "erin@clocksynk.com") {
+        return getTaskRequests();
+      }
+      return getTaskRequests(ctx.user.id);
+    }),
+    create: protectedProcedure
+      .input(
+        z.object({
+          title: z.string(),
+          description: z.string().optional(),
+          priority: z.enum(["low", "medium", "high"]).default("medium"),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const { createTaskRequest } = await import("./db");
+        return createTaskRequest({ ...input, requestedBy: ctx.user.id });
+      }),
+    approve: protectedProcedure
+      .input(z.object({ id: z.string(), assignTo: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        // Only admin can approve
+        if (ctx.user.email !== "erin@clocksynk.com") {
+          throw new Error("Only admin can approve task requests");
+        }
+        const { approveTaskRequest } = await import("./db");
+        return approveTaskRequest(input.id, ctx.user.id, input.assignTo);
+      }),
+    reject: protectedProcedure
+      .input(z.object({ id: z.string(), reason: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        // Only admin can reject
+        if (ctx.user.email !== "erin@clocksynk.com") {
+          throw new Error("Only admin can reject task requests");
+        }
+        const { rejectTaskRequest } = await import("./db");
+        return rejectTaskRequest(input.id, ctx.user.id, input.reason);
+      }),
+  }),
+
   announcements: router({
     list: publicProcedure.query(async () => {
       const { getAnnouncements } = await import("./db");

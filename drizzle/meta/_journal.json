@@ -15,6 +15,13 @@
       "when": 1760998699207,
       "tag": "0001_clean_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1761169141214,
+      "tag": "0002_needy_nova",
+      "breakpoints": true
     }
   ]
 }

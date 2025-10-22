@@ -91,6 +91,9 @@ import {
   tasks,
   Task,
   InsertTask,
+  taskRequests,
+  TaskRequest,
+  InsertTaskRequest,
   announcements,
   Announcement,
   InsertAnnouncement,
@@ -237,3 +240,76 @@ export async function deleteKeyDate(id: string): Promise<void> {
   if (!db) throw new Error("Database not available");
   await db.delete(keyDates).where(eq(keyDates.id, id));
 }
+
+
+// Task Request helpers
+export async function createTaskRequest(taskRequest: InsertTaskRequest): Promise<TaskRequest> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const id = `taskreq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  await db.insert(taskRequests).values({ ...taskRequest, id });
+  const result = await db.select().from(taskRequests).where(eq(taskRequests.id, id)).limit(1);
+  return result[0];
+}
+
+export async function getTaskRequests(userId?: string): Promise<TaskRequest[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  if (userId) {
+    // Return only requests from this user
+    return db.select().from(taskRequests)
+      .where(eq(taskRequests.requestedBy, userId))
+      .orderBy(taskRequests.createdAt);
+  }
+  
+  // Return all requests (for admin)
+  return db.select().from(taskRequests).orderBy(taskRequests.createdAt);
+}
+
+export async function approveTaskRequest(id: string, reviewerId: string, assignTo?: string): Promise<Task> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Get the request
+  const requests = await db.select().from(taskRequests).where(eq(taskRequests.id, id)).limit(1);
+  if (requests.length === 0) throw new Error("Task request not found");
+  
+  const request = requests[0];
+  
+  // Create the actual task
+  const task = await createTask({
+    title: request.title,
+    description: request.description || "",
+    assignedTo: assignTo || request.requestedBy,
+    priority: request.priority,
+    createdBy: reviewerId,
+  });
+  
+  // Update request status
+  await db.update(taskRequests)
+    .set({ 
+      status: "approved",
+      reviewedBy: reviewerId,
+      reviewedAt: new Date(),
+    })
+    .where(eq(taskRequests.id, id));
+  
+  return task;
+}
+
+export async function rejectTaskRequest(id: string, reviewerId: string, reason?: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(taskRequests)
+    .set({ 
+      status: "rejected",
+      reviewedBy: reviewerId,
+      reviewedAt: new Date(),
+      rejectionReason: reason,
+    })
+    .where(eq(taskRequests.id, id));
+}
+

@@ -264,11 +264,11 @@ export const appRouter = router({
 
   // Board Member View
   boardView: router({
-    getMetrics: protectedProcedure.query(async () => {
+    getMetrics: publicProcedure.query(async () => {
       const { getBoardMetrics } = await import("./db");
       return getBoardMetrics();
     }),
-    getRecentActivity: protectedProcedure.query(async () => {
+    getRecentActivity: publicProcedure.query(async () => {
       const { getRecentActivity } = await import("./db");
       return getRecentActivity();
     }),

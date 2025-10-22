@@ -1,10 +1,29 @@
 import TeamsLayout from "@/components/TeamsLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/_core/hooks/useAuth";
 
 export default function Sheets() {
+  const { user } = useAuth();
+  
+  // Only Erin (admin) can access this page
+  const isAdmin = user?.email === "erin@clocksynk.com";
+  
+  if (!isAdmin) {
+    return (
+      <TeamsLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Lock className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400 mb-2">Access Denied</p>
+            <p className="text-sm text-gray-500">Only administrators can access the management spreadsheet.</p>
+          </div>
+        </div>
+      </TeamsLayout>
+    );
+  }
   // Your management spreadsheet ID
   const spreadsheetId = "1MvIb2iBnX-9WVlq89D6HDzzvaLi4zswdnNML5NEJCL8";
   const gid = "1895001918"; // The sheet tab ID from your URL

@@ -41,24 +41,34 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
   const { user, logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const navigation = [
+  const isAdmin = user?.email === "erin@clocksynk.com";
+  
+  const allNavigation = [
     { name: "Dashboard", href: "/", icon: LayoutDashboard },
     { name: "Check-In", href: "/check-in", icon: CheckCircle2 },
     { name: "Tasks", href: "/tasks", icon: CheckSquare },
     { name: "Calendar", href: "/calendar", icon: Calendar },
-    { name: "Sheets", href: "/sheets", icon: Table },
+    { name: "Sheets", href: "/sheets", icon: Table, adminOnly: true },
     { name: "Drive", href: "/drive", icon: FolderOpen },
     { name: "Meet", href: "/meet", icon: Video },
     { name: "Chat", href: "/chat", icon: MessageSquare },
     { name: "Announcements", href: "/announcements", icon: Megaphone },
     { name: "Ideas", href: "/ideas", icon: Lightbulb },
     { name: "Key Dates", href: "/key-dates", icon: Calendar },
-    { name: "Reports", href: "/reports", icon: FileText },
+    { name: "Reports", href: "/reports", icon: FileText, adminOnly: true },
     { name: "Board View", href: "/board-view", icon: TrendingUp },
-    { name: "Budget", href: "/budget", icon: Wallet },
+    { name: "Budget", href: "/budget", icon: Wallet, adminOnly: true },
     { name: "Social Media", href: "/social-media", icon: Share2 },
     { name: "Client Portal", href: "/client-portal", icon: Users },
   ];
+  
+  // Filter navigation based on user role
+  const navigation = allNavigation.filter(item => {
+    if (item.adminOnly) {
+      return isAdmin;
+    }
+    return true;
+  });
 
   const isActive = (href: string) => {
     if (href === "/") return location === "/";

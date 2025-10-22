@@ -61,7 +61,7 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
       <header className="flex h-12 items-center justify-between border-b border-border bg-card px-4">
         {/* Left: Logo and App Title */}
         <div className="flex items-center gap-3">
-          <img src={APP_LOGO} alt={APP_TITLE} className="h-8 w-8" />
+          <img src="/logo.png" alt={APP_TITLE} className="h-8 w-8 object-contain" />
           <span className="text-sm font-semibold text-foreground">{APP_TITLE}</span>
         </div>
 

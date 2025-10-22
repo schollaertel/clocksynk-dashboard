@@ -43,75 +43,62 @@
 }
 
 :root {
-  /* ClockSynk Brand Colors */
-  --primary: oklch(0.25 0.08 255); /* Deep Blue #1e3a8a */
-  --primary-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.25 0.08 255);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --radius: 0.65rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.235 0.015 65);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.235 0.015 65);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.235 0.015 65);
-  --secondary: oklch(0.55 0.15 230); /* Electric Blue #3b82f6 */
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.65 0.15 160); /* Bright Green #10b981 */
-  --accent-foreground: oklch(0.145 0 0);
-  --destructive: oklch(0.65 0.2 35); /* Energetic Orange #f97316 */
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.623 0.214 259.815);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.235 0.015 65);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.623 0.214 259.815);
-}
-
-.dark {
-  --primary: var(--color-blue-700);
-  --primary-foreground: var(--color-blue-50);
-  --sidebar-primary: var(--color-blue-500);
-  --sidebar-primary-foreground: var(--color-blue-50);
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.85 0.005 65);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.85 0.005 65);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.85 0.005 65);
-  --secondary: oklch(0.24 0.006 286.033);
-  --secondary-foreground: oklch(0.7 0.005 65);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground:  oklch(0.92 0.005 65);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.488 0.243 264.376);
-  --chart-1: var(--color-blue-300);
-  --chart-2: var(--color-blue-500);
-  --chart-3: var(--color-blue-600);
-  --chart-4: var(--color-blue-700);
-  --chart-5: var(--color-blue-800);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.85 0.005 65);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground:  oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.488 0.243 264.376);
+  /* ClockSynk Brand Colors - Dark Navy Theme */
+  /* Primary: Bright Green (#10b981) - Innovation, sync success */
+  --primary: oklch(0.65 0.17 160);
+  --primary-foreground: oklch(0.15 0.02 220);
+  
+  /* Secondary: Electric Blue (#3b82f6) - Technology, connectivity */
+  --secondary: oklch(0.60 0.20 250);
+  --secondary-foreground: oklch(0.98 0 0);
+  
+  /* Accent: Energetic Orange (#f97316) - Sports energy, action */
+  --accent: oklch(0.68 0.19 35);
+  --accent-foreground: oklch(0.15 0.02 220);
+  
+  /* Destructive: Also uses Energetic Orange for urgency */
+  --destructive: oklch(0.68 0.19 35);
+  --destructive-foreground: oklch(0.98 0 0);
+  
+  /* Background: Dark Navy (#0f172a) - Premium, sophisticated */
+  --background: oklch(0.15 0.02 220);
+  --foreground: oklch(0.98 0 0);
+  
+  /* Cards: Slightly lighter navy for depth */
+  --card: oklch(0.19 0.02 220);
+  --card-foreground: oklch(0.98 0 0);
+  
+  /* Popover */
+  --popover: oklch(0.19 0.02 220);
+  --popover-foreground: oklch(0.98 0 0);
+  
+  /* Muted: Charcoal Gray (#374151) - Professional base */
+  --muted: oklch(0.35 0.01 220);
+  --muted-foreground: oklch(0.70 0.01 220);
+  
+  /* Borders: Subtle lighter navy */
+  --border: oklch(0.25 0.02 220);
+  --input: oklch(0.25 0.02 220);
+  --ring: oklch(0.60 0.20 250);
+  
+  /* Charts: Use brand colors */
+  --chart-1: oklch(0.65 0.17 160); /* Bright Green */
+  --chart-2: oklch(0.60 0.20 250); /* Electric Blue */
+  --chart-3: oklch(0.68 0.19 35);  /* Energetic Orange */
+  --chart-4: oklch(0.50 0.15 160); /* Darker Green */
+  --chart-5: oklch(0.45 0.18 250); /* Darker Blue */
+  
+  /* Sidebar: Dark Navy with Bright Green accent */
+  --sidebar: oklch(0.15 0.02 220);
+  --sidebar-foreground: oklch(0.98 0 0);
+  --sidebar-primary: oklch(0.65 0.17 160);
+  --sidebar-primary-foreground: oklch(0.15 0.02 220);
+  --sidebar-accent: oklch(0.25 0.02 220);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.25 0.02 220);
+  --sidebar-ring: oklch(0.65 0.17 160);
+  
+  --radius: 0.5rem;
 }
 
 @layer base {
@@ -171,3 +158,4 @@
     }
   }
 }
+

@@ -3,9 +3,11 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
+import { googleApiRouter } from "./googleApiRouter";
 
 export const appRouter = router({
   system: systemRouter,
+  google: googleApiRouter,
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -21,8 +23,13 @@ export const appRouter = router({
   // ClockSynk Dashboard Routers
   tasks: router({
     list: publicProcedure.query(async () => {
-      const { getTasks } = await import("./googleSheets");
-      return getTasks();
+      try {
+        const { getTasks } = await import("./googleSheets");
+        return await getTasks();
+      } catch (error) {
+        console.error('[Tasks] Error fetching tasks:', error);
+        return [];
+      }
     }),
     create: protectedProcedure
       .input(

@@ -23,16 +23,27 @@ export async function fetchSheetData(
     // Format: https://docs.google.com/spreadsheets/d/{id}/gviz/tq?tqx=out:csv&sheet={sheetName}
     const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
     
-    const response = await fetch(url);
+    console.log(`[Google Sheets] Fetching sheet: ${sheetName}`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'ClockSynk-Dashboard/1.0',
+      },
+    });
+    
     if (!response.ok) {
-      console.error(`Failed to fetch sheet "${sheetName}":`, response.statusText);
+      console.error(`[Google Sheets] Failed to fetch sheet "${sheetName}": ${response.status} ${response.statusText}`);
+      console.error(`[Google Sheets] Make sure the sheet is publicly accessible (Anyone with link can view)`);
       return [];
     }
     
     const csvText = await response.text();
-    return parseCSV(csvText);
+    const data = parseCSV(csvText);
+    console.log(`[Google Sheets] Successfully fetched ${data.length} rows from "${sheetName}"`);
+    return data;
   } catch (error) {
-    console.error(`Error fetching sheet "${sheetName}":`, error);
+    console.error(`[Google Sheets] Error fetching sheet "${sheetName}":`, error);
+    console.error(`[Google Sheets] This usually means the sheet is not publicly accessible or the sheet name is incorrect.`);
     return [];
   }
 }

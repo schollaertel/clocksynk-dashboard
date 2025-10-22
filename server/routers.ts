@@ -212,6 +212,56 @@ export const appRouter = router({
       }),
   }),
 
+  // Time Tracking
+  timeTracking: router({    getTodayEntry: protectedProcedure.query(async ({ ctx }) => {
+      const { getTodayTimeEntry } = await import("./db");
+      return getTodayTimeEntry(ctx.user.id);
+    }),
+    clockIn: protectedProcedure
+      .input(z.object({ notes: z.string().optional() }).optional())
+      .mutation(async ({ input, ctx }) => {
+        const { clockIn } = await import("./db");
+        return clockIn(ctx.user.id, input?.notes);
+      }),
+    clockOut: protectedProcedure
+      .input(z.object({ notes: z.string().optional() }).optional())
+      .mutation(async ({ input, ctx }) => {
+        const { clockOut } = await import("./db");
+        return clockOut(ctx.user.id, input?.notes);
+      }),
+    getWeeklyHours: protectedProcedure.query(async ({ ctx }) => {
+      const { getWeeklyHours } = await import("./db");
+      return getWeeklyHours(ctx.user.id);
+    }),
+  }),
+
+  // Daily Check-In
+  checkIn: router({    submit: protectedProcedure
+      .input(z.object({ goal: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const { createDailyFocus } = await import("./db");
+        return createDailyFocus({ focusText: input.goal, userId: ctx.user.id });
+      }),
+  }),
+
+  // Client Portal
+  clientPortal: router({
+    getProjects: protectedProcedure.query(async ({ ctx }) => {
+      const { getClientProjects } = await import("./db");
+      return getClientProjects(ctx.user.id);
+    }),
+    getUpdates: protectedProcedure.query(async ({ ctx }) => {
+      const { getProjectUpdates } = await import("./db");
+      return getProjectUpdates(ctx.user.id);
+    }),
+    sendMessage: protectedProcedure
+      .input(z.object({ message: z.string() }))
+      .mutation(async ({ input, ctx }) => {
+        const { createProjectUpdate } = await import("./db");
+        return createProjectUpdate({ message: input.message, author: ctx.user.id });
+      }),
+  }),
+
   // Google Sheets Lookup
   sheets: router({
     fetchData: publicProcedure

@@ -106,6 +106,15 @@ import {
   keyDates,
   KeyDate,
   InsertKeyDate,
+  timeEntries,
+  TimeEntry,
+  InsertTimeEntry,
+  clientProjects,
+  ClientProject,
+  InsertClientProject,
+  projectUpdates,
+  ProjectUpdate,
+  InsertProjectUpdate,
 } from "../drizzle/schema";
 import { desc, and, gte, lte } from "drizzle-orm";
 
@@ -311,5 +320,166 @@ export async function rejectTaskRequest(id: string, reviewerId: string, reason?:
       rejectionReason: reason,
     })
     .where(eq(taskRequests.id, id));
+}
+
+
+
+// Time Tracking helpers
+export async function getTodayTimeEntry(userId: string): Promise<TimeEntry | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  
+  const entries = await db.select().from(timeEntries)
+    .where(and(
+      eq(timeEntries.userId, userId),
+      gte(timeEntries.date, today),
+      lte(timeEntries.date, tomorrow)
+    ))
+    .limit(1);
+  
+  return entries.length > 0 ? entries[0] : null;
+}
+
+export async function clockIn(userId: string, notes?: string): Promise<TimeEntry> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Check if already clocked in today
+  const existing = await getTodayTimeEntry(userId);
+  if (existing && !existing.clockOut) {
+    throw new Error("Already clocked in");
+  }
+  
+  const id = `time_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const now = new Date();
+  
+  await db.insert(timeEntries).values({
+    id,
+    userId,
+    clockIn: now,
+    date: now,
+    notes: notes || null,
+  });
+  
+  const result = await db.select().from(timeEntries).where(eq(timeEntries.id, id)).limit(1);
+  return result[0];
+}
+
+export async function clockOut(userId: string, notes?: string): Promise<TimeEntry> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const entry = await getTodayTimeEntry(userId);
+  if (!entry) {
+    throw new Error("No clock-in entry found for today");
+  }
+  
+  if (entry.clockOut) {
+    throw new Error("Already clocked out");
+  }
+  
+  const now = new Date();
+  const clockInTime = new Date(entry.clockIn);
+  const diff = now.getTime() - clockInTime.getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const totalHours = `${hours}:${minutes.toString().padStart(2, '0')}`;
+  
+  await db.update(timeEntries)
+    .set({
+      clockOut: now,
+      totalHours,
+      notes: notes || entry.notes,
+    })
+    .where(eq(timeEntries.id, entry.id));
+  
+  const result = await db.select().from(timeEntries).where(eq(timeEntries.id, entry.id)).limit(1);
+  return result[0];
+}
+
+export async function getWeeklyHours(userId: string): Promise<{ date: string; hours: string }[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  weekAgo.setHours(0, 0, 0, 0);
+  
+  const entries = await db.select().from(timeEntries)
+    .where(and(
+      eq(timeEntries.userId, userId),
+      gte(timeEntries.date, weekAgo)
+    ))
+    .orderBy(timeEntries.date);
+  
+  return entries.map(entry => ({
+    date: entry.date.toISOString().split('T')[0],
+    hours: entry.totalHours || "0:00",
+  }));
+}
+
+
+
+// Client Portal helpers
+export async function getClientProjects(clientId: string): Promise<ClientProject[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return db.select().from(clientProjects)
+    .where(eq(clientProjects.clientId, clientId))
+    .orderBy(desc(clientProjects.createdAt));
+}
+
+export async function getProjectUpdates(userId: string): Promise<ProjectUpdate[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get projects for this user first
+  const projects = await getClientProjects(userId);
+  if (projects.length === 0) return [];
+  
+  const projectIds = projects.map(p => p.id);
+  
+  // Get updates for all user's projects
+  const updates = await db.select().from(projectUpdates)
+    .where(eq(projectUpdates.isInternal, "no"))
+    .orderBy(desc(projectUpdates.createdAt))
+    .limit(20);
+  
+  return updates.filter(u => projectIds.includes(u.projectId));
+}
+
+export async function createProjectUpdate(data: { message: string; author: string; projectId?: string }): Promise<ProjectUpdate> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // If no projectId provided, get the first project for this user
+  let projectId = data.projectId;
+  if (!projectId) {
+    const projects = await getClientProjects(data.author);
+    if (projects.length > 0) {
+      projectId = projects[0].id;
+    } else {
+      throw new Error("No project found for this user");
+    }
+  }
+  
+  const id = `update_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  await db.insert(projectUpdates).values({
+    id,
+    projectId,
+    message: data.message,
+    author: data.author,
+    isInternal: "no",
+  });
+  
+  const result = await db.select().from(projectUpdates).where(eq(projectUpdates.id, id)).limit(1);
+  return result[0];
 }
 

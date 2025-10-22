@@ -109,3 +109,50 @@ export const keyDates = mysqlTable("keyDates", {
 
 export type KeyDate = typeof keyDates.$inferSelect;
 export type InsertKeyDate = Omit<typeof keyDates.$inferInsert, 'id'>;
+
+
+// Time Tracking - Clock in/out entries
+export const timeEntries = mysqlTable("timeEntries", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  userId: varchar("userId", { length: 64 }).notNull(),
+  clockIn: timestamp("clockIn").notNull(),
+  clockOut: timestamp("clockOut"),
+  totalHours: varchar("totalHours", { length: 20 }),
+  notes: text("notes"),
+  date: timestamp("date").notNull(),
+});
+
+export type TimeEntry = typeof timeEntries.$inferSelect;
+export type InsertTimeEntry = Omit<typeof timeEntries.$inferInsert, 'id'>;
+
+// Client Projects for client portal
+export const clientProjects = mysqlTable("clientProjects", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  clientId: varchar("clientId", { length: 64 }).notNull(),
+  clientName: varchar("clientName", { length: 255 }).notNull(),
+  projectName: text("projectName").notNull(),
+  description: text("description"),
+  status: mysqlEnum("status", ["planning", "in_progress", "review", "completed"]).default("planning").notNull(),
+  startDate: timestamp("startDate"),
+  dueDate: timestamp("dueDate"),
+  budget: varchar("budget", { length: 50 }),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type ClientProject = typeof clientProjects.$inferSelect;
+export type InsertClientProject = Omit<typeof clientProjects.$inferInsert, 'id'>;
+
+// Project Updates/Messages for client communication
+export const projectUpdates = mysqlTable("projectUpdates", {
+  id: varchar("id", { length: 64 }).primaryKey(),
+  projectId: varchar("projectId", { length: 64 }).notNull(),
+  message: text("message").notNull(),
+  author: varchar("author", { length: 64 }).notNull(),
+  isInternal: mysqlEnum("isInternal", ["yes", "no"]).default("no").notNull(),
+  createdAt: timestamp("createdAt").defaultNow(),
+});
+
+export type ProjectUpdate = typeof projectUpdates.$inferSelect;
+export type InsertProjectUpdate = Omit<typeof projectUpdates.$inferInsert, 'id'>;
+

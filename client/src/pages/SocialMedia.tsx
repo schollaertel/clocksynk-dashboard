@@ -222,7 +222,7 @@ export default function SocialMedia() {
                 <p className="text-blue-300 font-medium">Campaign Management via Google Drive</p>
                 <p className="text-sm text-blue-200 mt-1">
                   Each campaign has its own folder in Google Drive with a planning sheet and assets. 
-                  Use Go High Level for actual posting and scheduling.
+                  Use the content calendar to plan and schedule your posts.
                 </p>
               </div>
             </div>
@@ -387,15 +387,6 @@ export default function SocialMedia() {
                         </Button>
                       )}
                     </div>
-
-                    <Button
-                      size="sm"
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                      onClick={() => toast.info("Open Go High Level to schedule posts")}
-                    >
-                      <ExternalLink className="h-3 w-3 mr-1" />
-                      Schedule in GHL
-                    </Button>
                   </CardContent>
                 </Card>
               ))

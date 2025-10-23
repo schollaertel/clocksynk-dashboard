@@ -22,6 +22,8 @@ import {
   Users,
   Wallet,
   Share2,
+  Briefcase,
+  Target,
 } from "lucide-react";
 import { ReactNode, useState } from "react";
 import { useLocation } from "wouter";
@@ -44,10 +46,10 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
   const isAdmin = user?.email === "erin@clocksynk.com";
   
   const allNavigation = [
-    { name: "Dashboard", href: "/", icon: LayoutDashboard },
-    { name: "Check-In", href: "/check-in", icon: CheckCircle2 },
+    { name: "Board View", href: "/board-view", icon: TrendingUp },
     { name: "Tasks", href: "/tasks", icon: CheckSquare },
-    { name: "Calendar", href: "/calendar", icon: Calendar },
+    { name: "Projects", href: "/projects", icon: Briefcase },
+    { name: "Daily Focus", href: "/daily-focus", icon: Target },
     { name: "Sheets", href: "/sheets", icon: Table, adminOnly: true },
     { name: "Drive", href: "/drive", icon: FolderOpen },
     { name: "Meet", href: "/meet", icon: Video },
@@ -56,7 +58,6 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
     { name: "Ideas", href: "/ideas", icon: Lightbulb },
     { name: "Key Dates", href: "/key-dates", icon: Calendar },
     { name: "Reports", href: "/reports", icon: FileText, adminOnly: true },
-    { name: "Board View", href: "/board-view", icon: TrendingUp },
     { name: "Budget", href: "/budget", icon: Wallet, adminOnly: true },
     { name: "Social Media", href: "/social-media", icon: Share2 },
   ];

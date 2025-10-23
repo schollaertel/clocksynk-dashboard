@@ -48,8 +48,6 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
   const allNavigation = [
     { name: "Board View", href: "/board-view", icon: TrendingUp },
     { name: "Tasks", href: "/tasks", icon: CheckSquare },
-    { name: "Projects", href: "/projects", icon: Briefcase },
-    { name: "Daily Focus", href: "/daily-focus", icon: Target },
     { name: "Sheets", href: "/sheets", icon: Table, adminOnly: true },
     { name: "Drive", href: "/drive", icon: FolderOpen },
     { name: "Meet", href: "/meet", icon: Video },

@@ -19,10 +19,12 @@ import {
   Send,
   FileText,
   Image as ImageIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
 export default function SocialMedia() {
@@ -30,6 +32,7 @@ export default function SocialMedia() {
   const [newIdeaTitle, setNewIdeaTitle] = useState("");
   const [newIdeaDescription, setNewIdeaDescription] = useState("");
   const [showIdeaDialog, setShowIdeaDialog] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // Fetch campaigns from Google Drive
   const { data: campaigns } = trpc.socialMedia.listCampaigns.useQuery();
@@ -83,6 +86,61 @@ export default function SocialMedia() {
       default:
         return <FolderOpen className="h-4 w-4" />;
     }
+  };
+
+  // Generate calendar grid
+  const calendarGrid = useMemo(() => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth();
+    
+    // First day of the month
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    // Start from Sunday of the week containing the first day
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+    
+    // Generate 6 weeks (42 days) to cover all possible month layouts
+    const days = [];
+    const currentDate = new Date(startDate);
+    
+    for (let i = 0; i < 42; i++) {
+      const dateStr = currentDate.toISOString().split('T')[0];
+      const isCurrentMonth = currentDate.getMonth() === month;
+      const isToday = currentDate.toDateString() === new Date().toDateString();
+      
+      // Find posts for this date
+      const postsForDay = contentCalendar?.filter((item: any) => {
+        const itemDate = new Date(item.date).toISOString().split('T')[0];
+        return itemDate === dateStr;
+      }) || [];
+      
+      days.push({
+        date: new Date(currentDate),
+        dateStr,
+        day: currentDate.getDate(),
+        isCurrentMonth,
+        isToday,
+        posts: postsForDay,
+      });
+      
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return days;
+  }, [currentMonth, contentCalendar]);
+
+  const previousMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+  };
+
+  const nextMonth = () => {
+    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
+  };
+
+  const goToToday = () => {
+    setCurrentMonth(new Date());
   };
 
   // Google Drive folder URL
@@ -168,6 +226,109 @@ export default function SocialMedia() {
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Content Calendar - Calendar Grid View */}
+        <Card className="bg-gray-800/50 border-gray-700">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-purple-400" />
+                  Content Calendar
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Scheduled posts across all campaigns
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={previousMonth}
+                  className="border-gray-600 text-gray-300"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={goToToday}
+                  className="border-gray-600 text-gray-300 px-4"
+                >
+                  Today
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={nextMonth}
+                  className="border-gray-600 text-gray-300"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <div className="text-center mt-4">
+              <h3 className="text-2xl font-bold text-white">
+                {currentMonth.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+              </h3>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {/* Calendar Header - Days of Week */}
+            <div className="grid grid-cols-7 gap-2 mb-2">
+              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                <div key={day} className="text-center text-sm font-semibold text-gray-400 py-2">
+                  {day}
+                </div>
+              ))}
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {calendarGrid.map((dayInfo, index) => (
+                <div
+                  key={index}
+                  className={`
+                    min-h-[100px] p-2 rounded-lg border
+                    ${dayInfo.isCurrentMonth ? "bg-gray-900/50 border-gray-700" : "bg-gray-900/20 border-gray-800"}
+                    ${dayInfo.isToday ? "ring-2 ring-purple-500" : ""}
+                  `}
+                >
+                  <div className={`
+                    text-sm font-semibold mb-1
+                    ${dayInfo.isCurrentMonth ? "text-white" : "text-gray-600"}
+                    ${dayInfo.isToday ? "text-purple-400" : ""}
+                  `}>
+                    {dayInfo.day}
+                  </div>
+                  
+                  {/* Posts for this day */}
+                  <div className="space-y-1">
+                    {dayInfo.posts.map((post: any, postIndex: number) => (
+                      <div
+                        key={postIndex}
+                        className="text-xs p-1 rounded bg-purple-600/20 border border-purple-600/30 text-purple-300 truncate"
+                        title={`${post.title} - ${post.campaign}`}
+                      >
+                        {post.title}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {(!contentCalendar || contentCalendar.length === 0) && (
+              <div className="text-center py-8 mt-4">
+                <Calendar className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                <p className="text-gray-400">No scheduled posts</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Add content to your campaign sheets to see them here
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -261,50 +422,6 @@ export default function SocialMedia() {
           </div>
         </div>
 
-        {/* Content Calendar */}
-        <Card className="bg-gray-800/50 border-gray-700">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-purple-400" />
-              Content Calendar
-            </CardTitle>
-            <CardDescription className="text-gray-400">
-              Upcoming scheduled posts across all campaigns
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {contentCalendar && contentCalendar.length > 0 ? (
-              <div className="space-y-3">
-                {contentCalendar.map((item: any, index: number) => (
-                  <div key={index} className="flex items-center gap-4 p-3 bg-gray-900/50 rounded-lg">
-                    <div className="flex-shrink-0 w-16 text-center">
-                      <p className="text-2xl font-bold text-white">
-                        {new Date(item.date).getDate()}
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        {new Date(item.date).toLocaleDateString("en-US", { month: "short" })}
-                      </p>
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-white font-medium">{item.title}</h4>
-                      <p className="text-sm text-gray-400 mt-1">{item.campaign}</p>
-                    </div>
-                    <Badge className="bg-purple-600">{item.platform}</Badge>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <Calendar className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No scheduled posts</p>
-                <p className="text-sm text-gray-500 mt-2">
-                  Add content to your campaign sheets to see them here
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Content Ideas */}
         <Card className="bg-gray-800/50 border-gray-700">
           <CardHeader>
@@ -358,52 +475,12 @@ export default function SocialMedia() {
                 <Lightbulb className="h-12 w-12 text-gray-600 mx-auto mb-4" />
                 <p className="text-gray-400">No content ideas yet</p>
                 <p className="text-sm text-gray-500 mt-2">
-                  Submit your creative ideas for social media content
+                  Team members can submit ideas using the "Submit Idea" button
                 </p>
               </div>
             )}
           </CardContent>
         </Card>
-
-        {/* Performance Stats (Placeholder) */}
-        <div className="grid gap-6 md:grid-cols-4">
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">Total Posts</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-white">24</div>
-              <p className="text-xs text-gray-500 mt-1">This month</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">Engagement</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-green-400">+12%</div>
-              <p className="text-xs text-gray-500 mt-1">vs last month</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">Reach</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-blue-400">8.5K</div>
-              <p className="text-xs text-gray-500 mt-1">Total impressions</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gray-800/50 border-gray-700">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium text-gray-400">Campaigns</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-purple-400">{campaigns?.length || 0}</div>
-              <p className="text-xs text-gray-500 mt-1">Active campaigns</p>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </TeamsLayout>
   );

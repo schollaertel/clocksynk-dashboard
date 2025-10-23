@@ -77,6 +77,42 @@ export const googleApiRouter = router({
           throw new Error("Failed to fetch calendar events");
         }
       }),
+    createEvent: protectedProcedure
+      .input(
+        z.object({
+          summary: z.string(),
+          description: z.string().optional(),
+          start: z.string(), // ISO date string
+          end: z.string().optional(),
+          attendees: z.array(z.string()).optional(),
+          calendarId: z.string().optional(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        const tokens = getUserTokens(ctx.user.id);
+        if (!tokens || !tokens.access_token) {
+          throw new Error("Google account not connected");
+        }
+
+        try {
+          const { createCalendarEvent } = await import("./googleOAuth");
+          const event = await createCalendarEvent(
+            tokens.access_token,
+            {
+              summary: input.summary,
+              description: input.description,
+              start: input.start,
+              end: input.end,
+              attendees: input.attendees,
+            },
+            input.calendarId
+          );
+          return event;
+        } catch (error) {
+          console.error("[Google Calendar] Error creating event:", error);
+          throw new Error("Failed to create calendar event");
+        }
+      }),
   }),
 });
 

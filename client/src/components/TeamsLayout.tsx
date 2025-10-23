@@ -59,7 +59,6 @@ export default function TeamsLayout({ children }: TeamsLayoutProps) {
     { name: "Board View", href: "/board-view", icon: TrendingUp },
     { name: "Budget", href: "/budget", icon: Wallet, adminOnly: true },
     { name: "Social Media", href: "/social-media", icon: Share2 },
-    { name: "Client Portal", href: "/client-portal", icon: Users },
   ];
   
   // Filter navigation based on user role

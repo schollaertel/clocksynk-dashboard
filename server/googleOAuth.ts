@@ -33,7 +33,7 @@ export function getAuthUrl(state?: string) {
       'https://www.googleapis.com/auth/userinfo.profile',
       'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/drive.readonly',
-      'https://www.googleapis.com/auth/calendar.readonly',
+      'https://www.googleapis.com/auth/calendar',
       'https://www.googleapis.com/auth/chat.spaces.readonly',
       'https://www.googleapis.com/auth/chat.messages.readonly',
     ],
@@ -100,6 +100,50 @@ export async function listCalendarEvents(accessToken: string, calendarId = 'prim
   });
   
   return response.data.items || [];
+}
+
+/**
+ * Create a calendar event
+ */
+export async function createCalendarEvent(
+  accessToken: string,
+  event: {
+    summary: string;
+    description?: string;
+    start: string; // ISO date string
+    end?: string; // ISO date string
+    attendees?: string[]; // email addresses
+  },
+  calendarId = 'primary'
+) {
+  const oauth2Client = createOAuth2Client();
+  oauth2Client.setCredentials({ access_token: accessToken });
+  
+  const calendar = google.calendar({ version: 'v3', auth: oauth2Client });
+  
+  // If no end time provided, make it an all-day event
+  const startDate = new Date(event.start);
+  const endDate = event.end ? new Date(event.end) : new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+  
+  const response = await calendar.events.insert({
+    calendarId,
+    requestBody: {
+      summary: event.summary,
+      description: event.description,
+      start: {
+        date: startDate.toISOString().split('T')[0], // All-day event
+      },
+      end: {
+        date: endDate.toISOString().split('T')[0], // All-day event
+      },
+      attendees: event.attendees?.map(email => ({ email })),
+      reminders: {
+        useDefault: true,
+      },
+    },
+  });
+  
+  return response.data;
 }
 
 /**

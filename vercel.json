@@ -1,18 +1,21 @@
 {
   "version": 2,
   "buildCommand": "pnpm install && pnpm build",
-  "devCommand": "pnpm dev",
   "installCommand": "pnpm install",
   "framework": null,
-  "outputDirectory": "dist",
-  "rewrites": [
+  "functions": {
+    "dist/index.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "routes": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
+      "src": "/api/(.*)",
+      "dest": "/dist/index.js"
     },
     {
-      "source": "/((?!api).*)",
-      "destination": "/index.html"
+      "src": "/.*",
+      "dest": "/dist/index.js"
     }
   ],
   "env": {

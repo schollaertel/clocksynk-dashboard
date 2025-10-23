@@ -1,16 +1,31 @@
-import { mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { pgEnum, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
 
 /**
  * Core user table backing auth flow.
  * Extend this file with additional tables as your product grows.
  * Columns use camelCase to match both database fields and generated types.
  */
-export const users = mysqlTable("users", {
+
+// Define enums for PostgreSQL
+export const roleEnum = pgEnum("role", ["user", "admin"]);
+export const taskStatusEnum = pgEnum("task_status", ["pending", "in_progress", "overdue", "done"]);
+export const priorityEnum = pgEnum("priority", ["low", "medium", "high"]);
+export const requestStatusEnum = pgEnum("request_status", ["pending", "approved", "rejected"]);
+export const yesNoEnum = pgEnum("yes_no", ["yes", "no"]);
+export const ideaCategoryEnum = pgEnum("idea_category", ["innovation", "process", "product", "marketing"]);
+export const ideaStatusEnum = pgEnum("idea_status", ["submitted", "under_review", "in_progress", "implemented", "archived"]);
+export const dateTypeEnum = pgEnum("date_type", ["deadline", "launch", "meeting", "event"]);
+export const projectStatusEnum = pgEnum("project_status", ["planning", "in_progress", "review", "completed"]);
+export const notificationTypeEnum = pgEnum("notification_type", ["mention", "task", "announcement", "report", "system"]);
+export const contentStatusEnum = pgEnum("content_status", ["pending", "approved", "rejected", "implemented"]);
+export const campaignStatusEnum = pgEnum("campaign_status", ["active", "scheduled", "completed", "archived"]);
+
+export const users = pgTable("users", {
   id: varchar("id", { length: 64 }).primaryKey(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: roleEnum("role").default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow(),
 });
@@ -21,13 +36,13 @@ export type InsertUser = typeof users.$inferInsert;
 // ClockSynk Dashboard Tables
 
 // Tasks table for team task management
-export const tasks = mysqlTable("tasks", {
+export const tasks = pgTable("tasks", {
   id: varchar("id", { length: 64 }).primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   assignedTo: varchar("assignedTo", { length: 64 }),
-  status: mysqlEnum("status", ["pending", "in_progress", "overdue", "done"]).default("pending").notNull(),
-  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
+  status: taskStatusEnum("status").default("pending").notNull(),
+  priority: priorityEnum("priority").default("medium").notNull(),
   category: varchar("category", { length: 100 }),
   dueDate: timestamp("dueDate"),
   createdBy: varchar("createdBy", { length: 64 }).notNull(),
@@ -39,13 +54,13 @@ export type Task = typeof tasks.$inferSelect;
 export type InsertTask = Omit<typeof tasks.$inferInsert, 'id'>;
 
 // Task Requests table - team members request tasks, admin approves
-export const taskRequests = mysqlTable("taskRequests", {
+export const taskRequests = pgTable("taskRequests", {
   id: varchar("id", { length: 64 }).primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   requestedBy: varchar("requestedBy", { length: 64 }).notNull(),
-  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
-  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  priority: priorityEnum("priority").default("medium").notNull(),
+  status: requestStatusEnum("status").default("pending").notNull(),
   rejectionReason: text("rejectionReason"),
   createdAt: timestamp("createdAt").defaultNow(),
   reviewedAt: timestamp("reviewedAt"),
@@ -56,13 +71,13 @@ export type TaskRequest = typeof taskRequests.$inferSelect;
 export type InsertTaskRequest = Omit<typeof taskRequests.$inferInsert, 'id'>;
 
 // Announcements table
-export const announcements = mysqlTable("announcements", {
+export const announcements = pgTable("announcements", {
   id: varchar("id", { length: 64 }).primaryKey(),
   title: text("title").notNull(),
   content: text("content").notNull(),
-  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
+  priority: priorityEnum("priority").default("medium").notNull(),
   category: varchar("category", { length: 100 }),
-  isPinned: mysqlEnum("isPinned", ["yes", "no"]).default("no").notNull(),
+  isPinned: yesNoEnum("isPinned").default("no").notNull(),
   createdBy: varchar("createdBy", { length: 64 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
 });
@@ -71,13 +86,13 @@ export type Announcement = typeof announcements.$inferSelect;
 export type InsertAnnouncement = Omit<typeof announcements.$inferInsert, 'id'>;
 
 // Ideas table for team suggestions
-export const ideas = mysqlTable("ideas", {
+export const ideas = pgTable("ideas", {
   id: varchar("id", { length: 64 }).primaryKey(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  category: mysqlEnum("category", ["innovation", "process", "product", "marketing"]).default("innovation").notNull(),
-  priority: mysqlEnum("priority", ["low", "medium", "high"]).default("medium").notNull(),
-  status: mysqlEnum("status", ["submitted", "under_review", "in_progress", "implemented", "archived"]).default("submitted").notNull(),
+  category: ideaCategoryEnum("category").default("innovation").notNull(),
+  priority: priorityEnum("priority").default("medium").notNull(),
+  status: ideaStatusEnum("status").default("submitted").notNull(),
   submittedBy: varchar("submittedBy", { length: 64 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
 });
@@ -86,7 +101,7 @@ export type Idea = typeof ideas.$inferSelect;
 export type InsertIdea = Omit<typeof ideas.$inferInsert, 'id'>;
 
 // Daily Focus entries
-export const dailyFocus = mysqlTable("dailyFocus", {
+export const dailyFocus = pgTable("dailyFocus", {
   id: varchar("id", { length: 64 }).primaryKey(),
   userId: varchar("userId", { length: 64 }).notNull(),
   focusText: text("focusText").notNull(),
@@ -97,12 +112,12 @@ export type DailyFocus = typeof dailyFocus.$inferSelect;
 export type InsertDailyFocus = Omit<typeof dailyFocus.$inferInsert, 'id'>;
 
 // Key Dates and Milestones
-export const keyDates = mysqlTable("keyDates", {
+export const keyDates = pgTable("keyDates", {
   id: varchar("id", { length: 64 }).primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
   date: timestamp("date").notNull(),
-  type: mysqlEnum("type", ["deadline", "launch", "meeting", "event"]).default("event").notNull(),
+  type: dateTypeEnum("type").default("event").notNull(),
   createdBy: varchar("createdBy", { length: 64 }).notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
 });
@@ -112,7 +127,7 @@ export type InsertKeyDate = Omit<typeof keyDates.$inferInsert, 'id'>;
 
 
 // Time Tracking - Clock in/out entries
-export const timeEntries = mysqlTable("timeEntries", {
+export const timeEntries = pgTable("timeEntries", {
   id: varchar("id", { length: 64 }).primaryKey(),
   userId: varchar("userId", { length: 64 }).notNull(),
   clockIn: timestamp("clockIn").notNull(),
@@ -126,13 +141,13 @@ export type TimeEntry = typeof timeEntries.$inferSelect;
 export type InsertTimeEntry = Omit<typeof timeEntries.$inferInsert, 'id'>;
 
 // Client Projects for client portal
-export const clientProjects = mysqlTable("clientProjects", {
+export const clientProjects = pgTable("clientProjects", {
   id: varchar("id", { length: 64 }).primaryKey(),
   clientId: varchar("clientId", { length: 64 }).notNull(),
   clientName: varchar("clientName", { length: 255 }).notNull(),
   projectName: text("projectName").notNull(),
   description: text("description"),
-  status: mysqlEnum("status", ["planning", "in_progress", "review", "completed"]).default("planning").notNull(),
+  status: projectStatusEnum("status").default("planning").notNull(),
   startDate: timestamp("startDate"),
   dueDate: timestamp("dueDate"),
   budget: varchar("budget", { length: 50 }),
@@ -144,12 +159,12 @@ export type ClientProject = typeof clientProjects.$inferSelect;
 export type InsertClientProject = Omit<typeof clientProjects.$inferInsert, 'id'>;
 
 // Project Updates/Messages for client communication
-export const projectUpdates = mysqlTable("projectUpdates", {
+export const projectUpdates = pgTable("projectUpdates", {
   id: varchar("id", { length: 64 }).primaryKey(),
   projectId: varchar("projectId", { length: 64 }).notNull(),
   message: text("message").notNull(),
   author: varchar("author", { length: 64 }).notNull(),
-  isInternal: mysqlEnum("isInternal", ["yes", "no"]).default("no").notNull(),
+  isInternal: yesNoEnum("isInternal").default("no").notNull(),
   createdAt: timestamp("createdAt").defaultNow(),
 });
 
@@ -158,13 +173,13 @@ export type InsertProjectUpdate = Omit<typeof projectUpdates.$inferInsert, 'id'>
 
 
 // Notifications table for @mentions and team notifications
-export const notifications = mysqlTable("notifications", {
+export const notifications = pgTable("notifications", {
   id: varchar("id", { length: 64 }).primaryKey(),
   userId: varchar("userId", { length: 64 }).notNull(),
-  type: mysqlEnum("type", ["mention", "task", "announcement", "report", "system"]).default("system").notNull(),
+  type: notificationTypeEnum("type").default("system").notNull(),
   title: text("title").notNull(),
   message: text("message").notNull(),
-  isRead: mysqlEnum("isRead", ["yes", "no"]).default("no").notNull(),
+  isRead: yesNoEnum("isRead").default("no").notNull(),
   link: varchar("link", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow(),
 });
@@ -175,11 +190,11 @@ export type InsertNotification = Omit<typeof notifications.$inferInsert, 'id'>;
 
 
 // Social Media Content Ideas
-export const contentIdeas = mysqlTable("contentIdeas", {
+export const contentIdeas = pgTable("contentIdeas", {
   id: varchar("id", { length: 64 }).primaryKey(),
   title: text("title").notNull(),
   description: text("description"),
-  status: mysqlEnum("status", ["pending", "approved", "rejected", "implemented"]).default("pending").notNull(),
+  status: contentStatusEnum("status").default("pending").notNull(),
   submittedBy: varchar("submittedBy", { length: 64 }).notNull(),
   reviewedBy: varchar("reviewedBy", { length: 64 }),
   reviewedAt: timestamp("reviewedAt"),
@@ -190,11 +205,11 @@ export type ContentIdea = typeof contentIdeas.$inferSelect;
 export type InsertContentIdea = Omit<typeof contentIdeas.$inferInsert, 'id'>;
 
 // Social Media Campaigns
-export const socialCampaigns = mysqlTable("socialCampaigns", {
+export const socialCampaigns = pgTable("socialCampaigns", {
   id: varchar("id", { length: 64 }).primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
-  status: mysqlEnum("status", ["active", "scheduled", "completed", "archived"]).default("active").notNull(),
+  status: campaignStatusEnum("status").default("active").notNull(),
   folderUrl: varchar("folderUrl", { length: 500 }),
   sheetUrl: varchar("sheetUrl", { length: 500 }),
   postsCount: varchar("postsCount", { length: 10 }).default("0"),
@@ -209,7 +224,7 @@ export type InsertSocialCampaign = Omit<typeof socialCampaigns.$inferInsert, 'id
 
 
 // Google OAuth Tokens - for Google Workspace API access
-export const googleTokens = mysqlTable("googleTokens", {
+export const googleTokens = pgTable("googleTokens", {
   userId: varchar("userId", { length: 64 }).primaryKey().references(() => users.id),
   accessToken: text("accessToken").notNull(),
   refreshToken: text("refreshToken"),

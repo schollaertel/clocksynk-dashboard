@@ -1,54 +1,12 @@
 {
   "version": "7",
-  "dialect": "mysql",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1760998660301,
-      "tag": "0000_bouncy_shotgun",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1760998699207,
-      "tag": "0001_clean_la_nuit",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "5",
-      "when": 1761169141214,
-      "tag": "0002_needy_nova",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "5",
-      "when": 1761169531205,
-      "tag": "0003_boring_nehzno",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "5",
-      "when": 1761171882877,
-      "tag": "0004_lucky_black_tom",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "5",
-      "when": 1761172719414,
-      "tag": "0005_amused_jack_murdock",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "5",
-      "when": 1761221950454,
-      "tag": "0006_organic_diamondback",
+      "version": "7",
+      "when": 1761232117831,
+      "tag": "0000_exotic_steve_rogers",
       "breakpoints": true
     }
   ]

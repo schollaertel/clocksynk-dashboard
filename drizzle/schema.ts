@@ -206,3 +206,19 @@ export const socialCampaigns = mysqlTable("socialCampaigns", {
 export type SocialCampaign = typeof socialCampaigns.$inferSelect;
 export type InsertSocialCampaign = Omit<typeof socialCampaigns.$inferInsert, 'id'>;
 
+
+
+// Google OAuth Tokens - for Google Workspace API access
+export const googleTokens = mysqlTable("googleTokens", {
+  userId: varchar("userId", { length: 64 }).primaryKey().references(() => users.id),
+  accessToken: text("accessToken").notNull(),
+  refreshToken: text("refreshToken"),
+  expiresAt: timestamp("expiresAt").notNull(),
+  scope: text("scope"),
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type GoogleToken = typeof googleTokens.$inferSelect;
+export type InsertGoogleToken = typeof googleTokens.$inferInsert;
+

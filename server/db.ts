@@ -797,3 +797,71 @@ export async function createContentIdea(idea: any) {
   return result[0];
 }
 
+
+
+// Google OAuth Token Management
+
+export async function saveGoogleTokens(userId: string, tokens: {
+  accessToken: string;
+  refreshToken?: string;
+  expiresAt: Date;
+  scope?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { googleTokens } = await import("../drizzle/schema");
+  
+  // Upsert: update if exists, insert if not
+  await db.insert(googleTokens).values({
+    userId,
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken || null,
+    expiresAt: tokens.expiresAt,
+    scope: tokens.scope || null,
+    updatedAt: new Date(),
+  }).onDuplicateKeyUpdate({
+    set: {
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken || null,
+      expiresAt: tokens.expiresAt,
+      scope: tokens.scope || null,
+      updatedAt: new Date(),
+    }
+  });
+}
+
+export async function getGoogleTokens(userId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { googleTokens } = await import("../drizzle/schema");
+  
+  const result = await db.select().from(googleTokens)
+    .where(eq(googleTokens.userId, userId))
+    .limit(1);
+  
+  return result[0] || null;
+}
+
+export async function deleteGoogleTokens(userId: string) {
+  const db = await getDb();
+  if (!db) return;
+  
+  const { googleTokens } = await import("../drizzle/schema");
+  
+  await db.delete(googleTokens).where(eq(googleTokens.userId, userId));
+}
+
+export async function hasValidGoogleTokens(userId: string): Promise<boolean> {
+  const tokens = await getGoogleTokens(userId);
+  if (!tokens) return false;
+  
+  // Check if tokens are expired
+  if (tokens.expiresAt && new Date(tokens.expiresAt) < new Date()) {
+    return false;
+  }
+  
+  return true;
+}
+

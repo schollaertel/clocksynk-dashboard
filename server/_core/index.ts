@@ -36,8 +36,8 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
-  // Google OAuth routes
-  app.use("/api/auth", googleAuthRouter);
+  // Google OAuth routes for Workspace API access
+  app.use("/api/oauth", googleAuthRouter);
   // tRPC API
   app.use(
     "/api/trpc",

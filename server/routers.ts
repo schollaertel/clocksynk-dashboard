@@ -144,7 +144,7 @@ export const appRouter = router({
 
   ideas: router({
     list: publicProcedure.query(async () => {
-      const { getIdeas } = await import("./googleSheets");
+      const { getIdeas } = await import("./db");
       return getIdeas();
     }),
     create: protectedProcedure
